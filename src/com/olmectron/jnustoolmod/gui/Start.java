@@ -1,0 +1,184 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package com.olmectron.jnustoolmod.gui;
+
+import com.olmectron.material.MaterialDesign;
+import com.olmectron.material.components.MaterialDropdownMenu;
+import com.olmectron.material.components.MaterialDropdownMenuItem;
+import com.olmectron.material.components.MaterialIconButton;
+import com.olmectron.material.components.MaterialTable;
+import com.olmectron.material.components.MaterialTableColumn;
+import com.olmectron.material.components.MaterialTooltip;
+import com.olmectron.material.constants.MaterialColor;
+import com.olmectron.material.layouts.MaterialEditableLayout;
+import de.mas.jnustool.NUSTitle;
+import de.mas.jnustool.Starter;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javafx.application.Application;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
+import javafx.collections.ListChangeListener;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
+import javafx.scene.Node;
+import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
+import javafx.stage.Stage;
+
+/**
+ *
+ * @author Édgar
+ */
+public class Start extends Application {
+    
+    @Override
+    public void start(Stage primaryStage) {
+        MaterialDesign.initSystemProperties();
+        try {
+            Starter.readConfig();
+        } catch (IOException ex) {
+            Logger.getLogger(Start.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        StackPane pane=new StackPane();
+        Scene scene=MaterialDesign.getMaterialScene(primaryStage, pane, 850, 480);
+        MaterialEditableLayout layout=new MaterialEditableLayout(true) {
+            @Override
+            public void onMenuButtonPressed(Button button) {
+                
+                 //To change body of generated methods, choose Tools | Templates.
+            }
+        };
+        DownloadPane downPane=new DownloadPane(layout);
+        TitlePane titlePane=new TitlePane(downPane,layout);
+        //layout.showModule("Title List", titlePane);
+        layout.setShowMiniButton(false);
+        layout.setMiniDrawer(true);
+        layout.addDrawerItem("Title List", "/res/list.png", titlePane);
+        
+        layout.addDrawerItem("Download Queue", "/res/download.png", downPane);
+        layout.setTabTooltip("Title List","Title list");
+        layout.setTabTooltip("Download Queue","Download queue");
+        
+        layout.showTab("Title List");
+        MaterialIconButton filterRegionButton=new MaterialIconButton();
+        filterRegionButton.setIcon("/res/filter.png");
+        MaterialTooltip tooltipFilter=new MaterialTooltip(filterRegionButton);
+        filterRegionButton.setOnClick(new EventHandler<ActionEvent>(){
+            @Override
+            public void handle(ActionEvent event) {
+                getFilterRegionMenu(filterRegionButton).unhide();
+//To change body of generated methods, choose Tools | Templates.
+            }
+        });
+        titlePane.titleCountProperty().addListener(new ChangeListener<Number>(){
+            @Override
+            public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
+                tooltipFilter.setText("Filtered by region: "+newValue.longValue());
+                //To change body of generated methods, choose Tools | Templates.
+            }
+        });
+        tooltipFilter.setText("Filtered by region: "+titlePane.getTitleCount());
+        layout.addToolbarActionButton(filterRegionButton,0);
+        
+         MaterialIconButton clearDownloadListButton=new MaterialIconButton();
+        clearDownloadListButton.setIcon("/res/clear.png");
+        MaterialTooltip tooltipList=new MaterialTooltip(clearDownloadListButton);
+        clearDownloadListButton.setOnClick(new EventHandler<ActionEvent>(){
+            @Override
+            public void handle(ActionEvent event) {
+                downPane.clearList();
+//To change body of generated methods, choose Tools | Templates.
+            }
+        });
+        tooltipList.setText("Clear download list");
+        
+        layout.addToolbarActionButton(clearDownloadListButton,1);
+        
+        //layout.setTitle("Title List");
+        layout.setWindowTitle("JNUSTool GUI mod v0.1");
+        MaterialDesign.setPrimaryColorCode(MaterialColor.material.TEAL);
+        
+        pane.getChildren().add(layout);
+        primaryStage.show();
+    }
+    private MaterialDropdownMenu filterRegionMenu;
+    private MaterialDropdownMenu getFilterRegionMenu(Region origen){
+        int indice=-1;
+            if(filterRegionMenu!=null){
+                for(int i=0;i<filterRegionMenu.size();i++){
+                    if(filterRegionMenu.getItemAt(i).isSelected()){
+                        
+                        indice=i;
+                        break;
+                    }
+                }
+            }
+            filterRegionMenu=new MaterialDropdownMenu(origen);   
+            
+            filterRegionMenu.addItem(new MaterialDropdownMenuItem("American"){
+
+                    @Override
+                    public void onItemClick() {
+                        Global.settings.setRegionFilter("USA"); //To change body of generated methods, choose Tools | Templates.
+                    }
+                
+                });
+                filterRegionMenu.addItem(new MaterialDropdownMenuItem("European"){
+
+                    @Override
+                    public void onItemClick() {
+                         Global.settings.setRegionFilter("EUR"); //To change body of generated methods, choose Tools | Templates.
+                    }
+                
+                });
+                filterRegionMenu.addItem(new MaterialDropdownMenuItem("Japanese"){
+
+                    @Override
+                    public void onItemClick() {
+                         Global.settings.setRegionFilter("JAP");//To change body of generated methods, choose Tools | Templates.
+                    }
+                
+                });
+                filterRegionMenu.addItem(new MaterialDropdownMenuItem("Region Free"){
+
+                    @Override
+                    public void onItemClick() {
+                         Global.settings.setRegionFilter("UKWN"); //To change body of generated methods, choose Tools | Templates.
+                    }
+                
+                });
+                filterRegionMenu.addItem(new MaterialDropdownMenuItem("All"){
+
+                    @Override
+                    public void onItemClick() {
+                         Global.settings.setRegionFilter(null); //To change body of generated methods, choose Tools | Templates.
+                    }
+                
+                });
+        if(indice>-1){
+            filterRegionMenu.getItemAt(indice).setSelected(true);
+        }
+        else{
+            filterRegionMenu.getItemAt(filterRegionMenu.size()-1).setSelected(true);
+        }
+        
+        return filterRegionMenu;
+    }
+   
+    /**
+     * @param args the command line arguments
+     */
+    public static void main(String[] args) {
+        launch(args);
+    }
+    
+}

@@ -3,22 +3,74 @@ package de.mas.jnustool.util;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.LongProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleLongProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
+import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
+import javafx.collections.ObservableList;
 
 public class NUSTitleInformation implements Comparable<NUSTitleInformation>, Serializable{
 	private static final long serialVersionUID = 1L;
 	
-	private long titleID;
-	private String longnameEN;
 	private String ID6;
 	private String product_code;
 	private String content_platform;
 	private String company_code;
-	private int region;
+	
 	private byte[] key;
-	private ArrayList<Integer> versions = new ArrayList<>();
+	private ObservableList<Integer> versionsList;
+        private ObservableList<Integer> getVersionsList(){
+            if(versionsList==null){
+            
+                    versionsList=FXCollections.observableArrayList();
+                    versionsList.addListener(new ListChangeListener<Integer>(){
+                        @Override
+                        public void onChanged(ListChangeListener.Change<? extends Integer> c) {
+                            if(c.next()){
+                                if(c.wasAdded() || c.wasRemoved()){
+                                    updateLatestVersion();
+                                }
+                            }
+                            //To change body of generated methods, choose Tools | Templates.
+                        }
+                    });
+            }
+            return versionsList;
+        }
 	
 	private String selectedVersion = "latest";
-	
+	private void updateRegion(){
+            setRegion(getRegionAsRegion());
+        }
+private IntegerProperty regionInt;
+public IntegerProperty regionIntProperty(){
+   if(regionInt==null){
+       regionInt=new SimpleIntegerProperty(this,"regionInt");
+       regionInt.addListener(new ChangeListener<Number>(){
+           @Override
+           public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
+              updateRegion();
+               //To change body of generated methods, choose Tools | Templates.
+           }
+       });
+   }
+   return regionInt;
+}
+public void setRegionInt(int val){
+   regionIntProperty().set(val);
+}
+public int getRegionInt(){
+   return regionIntProperty().get();
+}
+
 	public enum Region{
 		EUR,
 		USA,
@@ -33,10 +85,10 @@ public class NUSTitleInformation implements Comparable<NUSTitleInformation>, Ser
 		setProduct_code(product_code);
 		setCompany_code(company_code);
 		setContent_platform(content_platform);
-		setRegion(region);
+		setRegionInt(region);
 		for(String s : versions){
 			if(s != null){
-				this.versions.add(Integer.parseInt(s));
+				getVersionsList().add(Integer.parseInt(s));
 			}
 		}
 	}
@@ -48,9 +100,10 @@ public class NUSTitleInformation implements Comparable<NUSTitleInformation>, Ser
 	public NUSTitleInformation(long titleID, String longnameEN, String ID6, String product_code,String content_platform,String company_code,int region) {
 		this(titleID, longnameEN, ID6, product_code,content_platform,company_code,region,new String[1]);
 	}
-
+        
+        
 	public Region getRegionAsRegion() {		
-		switch (region) {
+		switch (getRegionInt()) {
         	case 1:  return Region.JAP;                 
         	case 2:  return  Region.USA;
         	case 4:  return  Region.EUR;
@@ -82,21 +135,41 @@ public class NUSTitleInformation implements Comparable<NUSTitleInformation>, Ser
 		this.product_code = product_code;
 	}
 
-	public long getTitleID() {
-		return titleID;
-	}
+	private LongProperty titleID;
+public LongProperty titleIDProperty(){
+   if(titleID==null){
+       titleID=new SimpleLongProperty(this,"titleID");
+       titleID.addListener(new ChangeListener<Number>(){
+           @Override
+           public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
+               
+       updateTitleIDString(); //To change body of generated methods, choose Tools | Templates.
+           }
+       });
+   }
+   return titleID;
+}
+public void setTitleID(long val){
+   titleIDProperty().set(val);
+}
+public long getTitleID(){
+   return titleIDProperty().get();
+}
 
-	public void setTitleID(long titleID) {
-		this.titleID = titleID;
-	}
-
-	public String getLongnameEN() {
-		return longnameEN;
-	}
-
-	public void setLongnameEN(String longnameEN) {
-		this.longnameEN = longnameEN;
-	}
+	
+private StringProperty longnameEN;
+public StringProperty longnameENProperty(){
+   if(longnameEN==null){
+       longnameEN=new SimpleStringProperty(this,"longnameEN");
+   }
+   return longnameEN;
+}
+public void setLongnameEN(String val){
+   longnameENProperty().set(val);
+}
+public String getLongnameEN(){
+   return longnameENProperty().get();
+}
 
 	public String getID6() {
 		return ID6;
@@ -106,23 +179,45 @@ public class NUSTitleInformation implements Comparable<NUSTitleInformation>, Ser
 		ID6 = iD6;
 	}	
 	
-	public int getRegion() {
-		return region;
-	}
+	
+private ObjectProperty<Region> region;
+public ObjectProperty<Region> regionProperty(){
+   if(region==null){
+       region=new SimpleObjectProperty<Region>(this,"region");
+   }
+   return region;
+}
+public void setRegion(Region val){
+   regionProperty().set(val);
+}
+public Region getRegion(){
+   return regionProperty().get();
+}
 
-	public void setRegion(int region) {
-		this.region = region;
-	}
-
-	public String getTitleIDAsString() {
-		return String.format("%08X-%08X", titleID>>32,titleID<<32>>32);
+	public void updateTitleIDString() {
+		setTitleIDString(String.format("%08X-%08X", getTitleID()>>32,getTitleID()<<32>>32));
 		
 	}
+        
+private StringProperty titleIDString;
+public StringProperty titleIDStringProperty(){
+   if(titleIDString==null){
+       titleIDString=new SimpleStringProperty(this,"titleIDString");
+   }
+   return titleIDString;
+}
+public void setTitleIDString(String val){
+   titleIDStringProperty().set(val);
+}
+public String getTitleIDString(){
+   return titleIDStringProperty().get();
+}
+
 	
 	@Override
 	public String toString(){
-		String result =  getTitleIDAsString() + ";" + region +";" + getContent_platform() + ";" + getCompany_code() + ";"+ getProduct_code()+ ";" + getID6() + ";" + getLongnameEN();
-		for(Integer i :versions){
+		String result =  getTitleIDString() + ";" + region +";" + getContent_platform() + ";" + getCompany_code() + ";"+ getProduct_code()+ ";" + getID6() + ";" + getLongnameEN();
+		for(Integer i :getVersionsList()){
 			result += ";" + i;
 		}
 		//result += ";" + getSelectedVersion();
@@ -136,11 +231,11 @@ public class NUSTitleInformation implements Comparable<NUSTitleInformation>, Ser
 
 	public void init(NUSTitleInformation n) {
 		setTitleID(n.getTitleID());
-		setRegion(n.region);
+		setRegionInt(n.getRegionInt());
 		setCompany_code(n.company_code);
 		setContent_platform(n.content_platform);
 		setID6(n.ID6);
-		setLongnameEN(n.longnameEN);
+		setLongnameEN(n.getLongnameEN());
 		setProduct_code(n.product_code);
 		setKey(n.key);
 	}
@@ -155,25 +250,42 @@ public class NUSTitleInformation implements Comparable<NUSTitleInformation>, Ser
 	
 	@Override
 	public boolean equals(Object o){		
+                if(o!=null)
 		return titleID == ((NUSTitleInformation)o).titleID;
+                
+                return false;
 	}
 
-	public String getLatestVersion() {
+private StringProperty latestVersion;
+public StringProperty latestVersionProperty(){
+   if(latestVersion==null){
+       latestVersion=new SimpleStringProperty(this,"latestVersion");
+   }
+   return latestVersion;
+}
+public void setLatestVersion(String val){
+   latestVersionProperty().set(val);
+}
+public String getLatestVersion(){
+   return latestVersionProperty().get();
+}
+
+	private void updateLatestVersion() {
 		String result = "latest";
-		if(versions != null && !versions.isEmpty()){
-			result = versions.get(versions.size()-1) + "";
+		if(getVersionsList() != null && !getVersionsList().isEmpty()){
+			result = getVersionsList().get(getVersionsList().size()-1) + "";
 		}
-		return result;
+		setLatestVersion(result);
 	}
 
 	public List<Integer> getAllVersions() {
-		return versions;
+		return getVersionsList();
 	}
 	
 	public List<String> getAllVersionsAsString() {
 		List<String> list = new ArrayList<>();
-		if(versions != null && !versions.isEmpty()){
-			for(Integer v: versions){
+		if(getVersionsList() != null && !getVersionsList().isEmpty()){
+			for(Integer v: getVersionsList()){
 				list.add(v + "");
 			}			
 		}

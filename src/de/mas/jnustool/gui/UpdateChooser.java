@@ -68,7 +68,7 @@ public class UpdateChooser extends JPanel {
         HashMap<Integer,JComboBox<String>> comboboxes = new HashMap<>();
         for(NUSTitleInformation n: list_){
         	tableData[i] = new String[4];
-        	tableData[i][0] = n.getTitleIDAsString();
+        	tableData[i][0] = n.getTitleIDString();
         	tableData[i][1] = n.getRegionAsRegion().toString();    
         	tableData[i][2] = n.getLongnameEN();
         	tableData[i][3] = n.getLatestVersion();        	
