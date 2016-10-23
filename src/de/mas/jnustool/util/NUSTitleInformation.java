@@ -266,6 +266,9 @@ public StringProperty latestVersionProperty(){
 public void setLatestVersion(String val){
    latestVersionProperty().set(val);
 }
+public int getLatestVersionInteger(){
+    return getVersionsList().get(getVersionsList().size()-1);
+}
 public String getLatestVersion(){
    return latestVersionProperty().get();
 }

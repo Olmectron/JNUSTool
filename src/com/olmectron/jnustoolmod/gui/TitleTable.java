@@ -45,7 +45,7 @@ public class TitleTable extends MaterialTable<NUSTitleInformation> {
         super();
         dPane=pane;
         initTitleTable();
-        List<NUSTitleInformation> list=readUpdateCSV("updatetitles.csv");
+        List<NUSTitleInformation> list=readUpdateCSV("fulltitles.csv");
         Collections.sort(list);
         for(int i=0;i<list.size();i++){
             addItem(list.get(i));
@@ -159,7 +159,7 @@ public class TitleTable extends MaterialTable<NUSTitleInformation> {
     };
 });
         MaterialTableColumn nameColumn=new MaterialTableColumn("Name");
-       nameColumn.setMinWidth(452);
+       nameColumn.setMinWidth(470);
        nameColumn.setCellValueFactory(new PropertyValueFactory<NUSTitleInformation, String>("longnameEN"));
        nameColumn.setCellFactory(column -> {
     return new TableCell<NUSTitleInformation, String>() {
@@ -193,7 +193,7 @@ public class TitleTable extends MaterialTable<NUSTitleInformation> {
        versionColumn.setCellValueFactory(new PropertyValueFactory<NUSTitleInformation, String>("latestVersion"));
        
        
-       getTable().getColumns().addAll(titleColumn,nameColumn,regionColumn,versionColumn);
+       getTable().getColumns().addAll(titleColumn,nameColumn,regionColumn);//,versionColumn);
         
     }
     private SortedList<NUSTitleInformation> sortedData;

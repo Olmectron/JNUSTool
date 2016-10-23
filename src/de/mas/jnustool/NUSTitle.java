@@ -9,6 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ForkJoinPool;
 
@@ -220,32 +221,67 @@ public class NUSTitle {
 		}
 	}
 
-	public void downloadEncryptedFiles(Progress progress) throws IOException {
-		
+	public void downloadEncryptedFiles(Progress progress) throws IOException {		
 		Util.createSubfolder(getContentPath());
 		
-		Downloader.getInstance().downloadTMD(titleID,version,getContentPath());		
+		Logger.log("---Downloading encrypted files---");
+		Downloader.getInstance().downloadTMD(titleID,version,getContentPath());
+		Logger.log("Downloaded title.tmd");
 		tmd.downloadContents(progress);
-		try{
-			Downloader.getInstance().downloadTicket(titleID,getContentPath());
-			FileOutputStream fos = new FileOutputStream(getContentPath() + "/title.cert");		
-			fos.write(ticket.cert0);
-			fos.write(tmd.cert);
-			fos.write(ticket.cert1);
-			fos.close();
-			if(version > 0 && Settings.DL_ALL_VERSIONS){			
-				fos = new FileOutputStream(getContentPath() + "/title.cert." + version);		
-				fos.write(ticket.cert0);
-				fos.write(tmd.cert);
-				fos.write(ticket.cert1);
-				fos.close();
-			}
+		Logger.log("Downloaded content files");
+		
+	    File f = new File(getContentPath() + "/" + "title.tik");			    
+        if(!f.exists()){
+            try{
+                Downloader.getInstance().downloadTicket(titleID,getContentPath());
+                Logger.log("Downloaded title.tik");
+            }catch(Exception e){
+                Logger.log("!!!Missing file: title.tik. You need to add it manually before you can install this title.!!!");
+            }
+        }else{
+            Logger.log("Skipped title.tik");
+        }
+     
+        f = new File(getContentPath() + "/" + "title.tik");
+        byte[] defaultcert = null;
+        
+        Logger.log("Trying to create title.cert");
+        if(!f.exists() || Arrays.equals(ticket.cert1, new byte[0x300])){
+            try{
+            defaultcert = Util.getDefaultCert();
+            }catch(Exception e){
+                Logger.log("Failed to get missing cert from OSv10 cetk =(. Couldn't create title.cert");
+                e.printStackTrace();
+                return;
+            }
+            Logger.log("Got missing cert from OSv10 title");            
+        }else{
+            
+            defaultcert = ticket.cert1;
+        }
+        
+        try{ 
+            FileOutputStream fos = new FileOutputStream(getContentPath() + "/title.cert");
+            fos.write(tmd.cert1);
+            fos.write(tmd.cert2);
+            fos.write(defaultcert);
+            fos.close();
+            if(version > 0 && Settings.DL_ALL_VERSIONS){            
+                fos = new FileOutputStream(getContentPath() + "/title.cert." + version);        
+                fos.write(tmd.cert1);
+                fos.write(tmd.cert2);
+                fos.write(defaultcert);
+                fos.close();
+            }			
 		}catch(Exception e){
+		    e.printStackTrace();
 			Logger.log("Error while creating ticket files.");
 		}
+        Logger.log("Created title.cert");   
+        Logger.log("---Successfully downloaded encrypted files---");
 	}
 
-	NUSTitleInformation readMeta(InputStream bis) {
+	public NUSTitleInformation readMeta(InputStream bis) {
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         DocumentBuilder builder;
         

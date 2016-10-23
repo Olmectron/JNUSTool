@@ -30,6 +30,10 @@ public class NUSGUI extends JFrame {
     public NUSGUI(NUSTitle nus) {
         super();
         this.setResizable(false);
+        if(nus.getFst() == null){
+            Logger.log("Error: Can't create GUI window without the FST. Please provide a key/title.key. To download the encrpyted files use the -dlEncrypted argument");
+            System.exit(-1);
+        }
         setSize(600, 768);
         setTitle(String.format("%016X", nus.getTitleID()));
         getContentPane().setLayout(null);
@@ -43,6 +47,7 @@ public class NUSGUI extends JFrame {
         
        
         this.getContentPane().add(splitPane);
+        
         final JCheckBoxTree cbt = new JCheckBoxTree(nus);
         qPane.setViewportView(cbt);
         
@@ -57,11 +62,11 @@ public class NUSGUI extends JFrame {
         JButton btnNewButton = new JButton("Download");
         panel_1.add(btnNewButton);
         
-        JProgressBar progressBar = new JProgressBar();
+        final JProgressBar progressBar = new JProgressBar();
         panel_1.add(progressBar);
         
         progressBar.setValue(0);
-        Progress progress = new Progress();
+        final Progress progress = new Progress();
         progress.setProgressUpdateListener(new ProgressUpdateListener() {
 			
 			@Override
@@ -69,7 +74,7 @@ public class NUSGUI extends JFrame {
 				progressBar.setValue((int)p.statusInPercent());
 			}
 		});
-       
+        final NUSTitle nuscpy = nus;
         btnNewButton.addActionListener(new ActionListener() {
         	public void actionPerformed(ActionEvent e) { 
         		if(!progress.isInProgress()){
@@ -85,7 +90,7 @@ public class NUSGUI extends JFrame {
 	                    		list.add((FEntry) ((DefaultMutableTreeNode)obj).getUserObject());                    		
 	                    	}
 	                    }
-	        			nus.decryptFEntries(list, progress);
+	                    nuscpy.decryptFEntries(list, progress);
 	        			progress.operationFinish();
 	        			Logger.messageBox("Finished");
 	        		}}).start();

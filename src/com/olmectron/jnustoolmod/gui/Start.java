@@ -104,7 +104,7 @@ public class Start extends Application {
         layout.addToolbarActionButton(clearDownloadListButton,1);
         
         //layout.setTitle("Title List");
-        layout.setWindowTitle("JNUSTool GUI mod v0.1");
+        layout.setWindowTitle("JNUSTool GUI mod v0.2");
         MaterialDesign.setPrimaryColorCode(MaterialColor.material.TEAL);
         
         pane.getChildren().add(layout);

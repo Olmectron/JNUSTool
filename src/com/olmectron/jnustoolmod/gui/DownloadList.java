@@ -15,12 +15,15 @@ import com.olmectron.material.components.MaterialToast;
 import com.olmectron.material.constants.MaterialColor;
 import com.olmectron.material.utils.BackgroundTask;
 import de.mas.jnustool.Logger;
+import de.mas.jnustool.NUSTitle;
 import de.mas.jnustool.Progress;
 import de.mas.jnustool.ProgressUpdateListener;
 import de.mas.jnustool.Starter;
 import de.mas.jnustool.util.NUSTitleInformation;
 import de.mas.jnustool.util.Settings;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.logging.Level;
 import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -34,6 +37,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import org.utilities.Focus;
 
 /**
  *
@@ -64,29 +68,44 @@ public class DownloadList extends MaterialFlowList<NUSTitleInformation>{
             card.setCardWidth(500);
             card.setCardPadding(new Insets(16));
             MaterialDisplayText titleText=new MaterialDisplayText(item.getTitleIDString());
-            titleText.setFontSize(12);
+            titleText.setFontSize(14);
             titleText.setPadding(new Insets(0,8,0,0));
             titleText.setColorCode(MaterialColor.material.BLACK_54);
-            MaterialDisplayText nameText=new MaterialDisplayText(item.getLongnameEN()+" ("+item.getRegion().toString()+")");
-            nameText.setFontSize(15);
+            
+            MaterialDisplayText nameText=new MaterialDisplayText("");
+            try{
+                nameText.setText(item.getLongnameEN()+" ("+item.getRegion().toString()+")");
+                
+            }
+            catch(NullPointerException ex){
+                nameText.setText(item.getLongnameEN());
+            }
+            nameText.setFontSize(17);
             //nameText.setPadding(new Insets(0,0,8,0));
             nameText.setColorCode(MaterialColor.material.BLACK_87);
             HBox spanBox=new HBox();
             HBox.setHgrow(spanBox, Priority.ALWAYS);
             MaterialProgressBar bar=new MaterialProgressBar();
             MaterialDisplayText progress=new MaterialDisplayText("0%");
+            MaterialDisplayText total=new MaterialDisplayText("0 MB / 0 MB");
+            
+            total.setFontSize(14);
+            total.setColorCode(MaterialColor.material.GREEN);
+            
             progress.setFontSize(18);
             progress.setColorCode(MaterialColor.material.BLUE);
             progress.setId("progress");
             bar.setId("barra");
             progress.setMinWidth(60);
+            total.setId("total");
             progress.setAlignment(Pos.CENTER_RIGHT);
             bar.setProgress(0);
             HBox box=new HBox(new VBox(titleText,nameText),spanBox,progress);
             box.setPadding(new Insets(0,0,12,0));
             box.setAlignment(Pos.CENTER);
-            
+            total.setPadding(new Insets(0,0,8,0));
             card.addComponent(box);
+            card.addComponent(new HBox(total));
             card.addComponent(bar);
         //To change body of generated methods, choose Tools | Templates.
     }
@@ -129,6 +148,8 @@ public class DownloadList extends MaterialFlowList<NUSTitleInformation>{
     private void startDownload(MaterialStandardListItem<NUSTitleInformation> itemContainer){
         MaterialProgressBar barra=(MaterialProgressBar)itemContainer.lookup("#barra");
         MaterialDisplayText progressText=(MaterialDisplayText)itemContainer.lookup("#progress");
+        
+        MaterialDisplayText totalText=(MaterialDisplayText)itemContainer.lookup("#total");
         Progress progress=new Progress();
         progress.setProgressUpdateListener(new ProgressUpdateListener() {
 			
@@ -138,6 +159,7 @@ public class DownloadList extends MaterialFlowList<NUSTitleInformation>{
                                 @Override
                                 public void run() {
                                     
+            totalText.setText(Focus.decimal.format((double)progress.getCurrent()/1024/1024)+" MB"+"/"+Focus.decimal.format((double)progress.getTotal()/1024/1024)+" MB");
                             progressText.setText((p.statusInPercent())+"%"); //To change body of generated methods, choose Tools | Templates.
                                 }
                             });
@@ -147,23 +169,32 @@ public class DownloadList extends MaterialFlowList<NUSTitleInformation>{
         ArrayList<NUSTitleInformation> lista=new ArrayList<NUSTitleInformation>();
         lista.add(itemContainer.getItem());
         setCurrentItem(lista.get(0));
+        
+        NUSTitle title = new NUSTitle(getCurrentItem().getTitleID(),-1, null);
+					
         new Thread(new Runnable(){
 						@Override
 						public void run() {
                                                     
-							barra.setProgress(0);
-							progress.clear();
-							
-        Starter.downloadEncrypted(lista,progress);
-							progress.operationFinish();
+                                                    try {
+                                                        barra.setProgress(0);
+                                                        progress.clear();
+                                                        //title.decryptFEntries(title.getFst().getFileEntriesByFilePath(path), null);
+                    
+                                                        title.downloadEncryptedFiles(progress);
+                                                        //Starter.downloadEncrypted(lista,progress);
+                                                        progress.operationFinish();
                                                         Platform.runLater(new Runnable(){
                                                             @Override
                                                             public void run() {
                                                                 setCurrentItem(null);
-                                                               new MaterialToast(itemContainer.getItem().getLongnameEN()+" ("+itemContainer.getItem().getRegion().toString()+") finished!").unhide();							
-						 //To change body of generated methods, choose Tools | Templates.
+                                                                new MaterialToast(itemContainer.getItem().getLongnameEN()+" ("+itemContainer.getItem().getRegion().toString()+") finished!").unhide();
+                                                                //To change body of generated methods, choose Tools | Templates.
                                                             }
                                                         });
+                                                    } catch (IOException ex) {
+                                                        java.util.logging.Logger.getLogger(DownloadList.class.getName()).log(Level.SEVERE, null, ex);
+                                                    }
 							}
 	        			
 	        		}).start();
