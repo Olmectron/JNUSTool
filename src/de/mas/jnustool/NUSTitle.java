@@ -1,5 +1,7 @@
 package de.mas.jnustool;
 
+import com.olmectron.jnustoolmod.gui.TIKFile;
+import com.olmectron.material.files.ExportFile;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -27,6 +29,13 @@ import de.mas.jnustool.util.Settings;
 import de.mas.jnustool.util.Util;
 
 public class NUSTitle {
+    public TIKFile TIKFile=null;
+        public void setTIKFile(TIKFile t){
+            this.TIKFile=t;
+        }
+        public TIKFile getTIKFile(){
+            return this.TIKFile;
+        }
 	private TitleMetaData tmd;
 	private TIK ticket;
 	private FST fst;
@@ -220,7 +229,7 @@ public class NUSTitle {
 			e.printStackTrace();
 		}
 	}
-
+        
 	public void downloadEncryptedFiles(Progress progress) throws IOException {		
 		Util.createSubfolder(getContentPath());
 		
@@ -230,12 +239,19 @@ public class NUSTitle {
 		tmd.downloadContents(progress);
 		Logger.log("Downloaded content files");
 		
-	    File f = new File(getContentPath() + "/" + "title.tik");			    
+	    File f = new File(getContentPath() + "/" + "title.tik");	
+            
         if(!f.exists()){
             try{
                 Downloader.getInstance().downloadTicket(titleID,getContentPath());
                 Logger.log("Downloaded title.tik");
             }catch(Exception e){
+                if(getTIKFile()!=null){
+                    Files.copy(getTIKFile().getFile().toPath(),f.toPath());
+                    
+                    Logger.log("title.tik file imported to download directory");
+                }
+                else
                 Logger.log("!!!Missing file: title.tik. You need to add it manually before you can install this title.!!!");
             }
         }else{

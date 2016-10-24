@@ -1,5 +1,6 @@
 package de.mas.jnustool.util;
 
+import com.olmectron.jnustoolmod.gui.TIKFile;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,7 +20,13 @@ import javafx.collections.ObservableList;
 
 public class NUSTitleInformation implements Comparable<NUSTitleInformation>, Serializable{
 	private static final long serialVersionUID = 1L;
-	
+	public TIKFile TIKFile;
+        public void setTIKFile(TIKFile t){
+            this.TIKFile=t;
+        }
+        public TIKFile getTIKFile(){
+            return this.TIKFile;
+        }
 	private String ID6;
 	private String product_code;
 	private String content_platform;

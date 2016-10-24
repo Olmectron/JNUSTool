@@ -11,12 +11,16 @@ import com.olmectron.material.components.MaterialDropdownMenuItem;
 import com.olmectron.material.components.MaterialIconButton;
 import com.olmectron.material.components.MaterialTable;
 import com.olmectron.material.components.MaterialTableColumn;
+import com.olmectron.material.components.MaterialToast;
 import com.olmectron.material.components.MaterialTooltip;
 import com.olmectron.material.constants.MaterialColor;
+import com.olmectron.material.files.ExportFile;
 import com.olmectron.material.layouts.MaterialEditableLayout;
 import de.mas.jnustool.NUSTitle;
 import de.mas.jnustool.Starter;
+import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.application.Application;
@@ -29,7 +33,10 @@ import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.input.DragEvent;
+import javafx.scene.input.Dragboard;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.input.TransferMode;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
@@ -39,17 +46,71 @@ import javafx.stage.Stage;
  * @author Édgar
  */
 public class Start extends Application {
-    
+    private DownloadPane downPane;
+    private void setDragAndDropFunction(Scene scene){
+        scene.setOnDragOver(new EventHandler<DragEvent>() {
+            @Override
+            public void handle(DragEvent event) {
+                Dragboard db = event.getDragboard();
+                if (db.hasFiles()) {
+                    event.acceptTransferModes(TransferMode.COPY);
+                } else {
+                    event.consume();
+                }
+            }
+        });
+        
+        // Dropping over surface
+        scene.setOnDragDropped(new EventHandler<DragEvent>() {
+            @Override
+            public void handle(DragEvent event) {
+                Dragboard db = event.getDragboard();
+                boolean success = false;
+                if (db.hasFiles()) {
+                    success = true;
+                    //if(db.getFiles().size()>1){
+                    //new MaterialToast(R.string.drop_only_one.get(),MaterialToast.LENGTH_SHORT).unhide();
+                    //}
+                    //else{
+                    List<File> archivos=db.getFiles();
+                    if(archivos!=null){
+                        if(archivos.size()==1){
+                            if(archivos.get(0).getName().toLowerCase().endsWith(".tik")){
+                            TIKFile archivo=new  TIKFile(archivos.get(0));
+                        if(archivo.getTitleID()!=null){
+                            downPane.addFromTitleID(archivo.getTitleID(),archivo);
+                        }
+                            }
+                else{
+                                new MaterialToast("The dropped file isn't a .tik file").unhide();
+                            }
+                        }
+                        else if(archivos.size()>1){
+                            new MaterialToast("Just drag & drop one file at a time").unhide();
+                        }
+                    }
+                    
+                    
+                   
+                    //}
+                }
+                event.setDropCompleted(success);
+                event.consume();
+            }
+        });
+    }
     @Override
     public void start(Stage primaryStage) {
         MaterialDesign.initSystemProperties();
         try {
-            Starter.readConfig();
+            ExportFile.exportFile("/res/fulltitles.csv", "fulltitles.csv");
+            Starter.readConfig(primaryStage);
         } catch (IOException ex) {
             Logger.getLogger(Start.class.getName()).log(Level.SEVERE, null, ex);
         }
         StackPane pane=new StackPane();
         Scene scene=MaterialDesign.getMaterialScene(primaryStage, pane, 850, 480);
+        setDragAndDropFunction(scene);
         MaterialEditableLayout layout=new MaterialEditableLayout(true) {
             @Override
             public void onMenuButtonPressed(Button button) {
@@ -57,18 +118,23 @@ public class Start extends Application {
                  //To change body of generated methods, choose Tools | Templates.
             }
         };
-        DownloadPane downPane=new DownloadPane(layout);
+        downPane=new DownloadPane(layout);
         TitlePane titlePane=new TitlePane(downPane,layout);
+        SettingsPane settingsPane=new SettingsPane(layout);
         //layout.showModule("Title List", titlePane);
         layout.setShowMiniButton(false);
         layout.setMiniDrawer(true);
-        layout.addDrawerItem("Title List", "/res/list.png", titlePane);
+        layout.addDrawerItem("Download queue", "/res/download.png", downPane);
+        layout.addDrawerItem("Title list", "/res/list.png", titlePane);
         
-        layout.addDrawerItem("Download Queue", "/res/download.png", downPane);
-        layout.setTabTooltip("Title List","Title list");
-        layout.setTabTooltip("Download Queue","Download queue");
+        layout.addDrawerItem("Settings", "/res/settings.png", settingsPane);
         
-        layout.showTab("Title List");
+        layout.setTabTooltip("Title list","Title list");
+        layout.setTabTooltip("Download queue","Download queue");
+        
+        layout.setTabTooltip("Settings","Settings");
+        
+        layout.showTab("Download queue");
         MaterialIconButton filterRegionButton=new MaterialIconButton();
         filterRegionButton.setIcon("/res/filter.png");
         MaterialTooltip tooltipFilter=new MaterialTooltip(filterRegionButton);
@@ -104,7 +170,7 @@ public class Start extends Application {
         layout.addToolbarActionButton(clearDownloadListButton,1);
         
         //layout.setTitle("Title List");
-        layout.setWindowTitle("JNUSTool GUI mod v0.2");
+        layout.setWindowTitle("JNUSTool GUI mod v0.5");
         MaterialDesign.setPrimaryColorCode(MaterialColor.material.TEAL);
         
         pane.getChildren().add(layout);

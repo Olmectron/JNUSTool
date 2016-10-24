@@ -1,5 +1,8 @@
 package de.mas.jnustool;
 
+import com.olmectron.material.MaterialDesign;
+import com.olmectron.material.components.MaterialToast;
+import com.olmectron.material.files.FieldsFile;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -19,6 +22,9 @@ import de.mas.jnustool.gui.UpdateChooser;
 import de.mas.jnustool.util.Downloader;
 import de.mas.jnustool.util.NUSTitleInformation;
 import de.mas.jnustool.util.Util;
+import javafx.event.EventHandler;
+import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
 
 public class Starter {
 
@@ -28,7 +34,7 @@ public class Starter {
 	    Logger.log("JNUSTool 0.0.8c - alpha - by Maschell");
 		Logger.log("");
 		try {
-			readConfig();
+			readConfig(null);
 		} catch (IOException e) {
 			System.err.println("Error while reading config! Needs to be:");
 			System.err.println("DOWNLOAD URL BASE");
@@ -170,18 +176,44 @@ public class Starter {
 
 
 
-	public static void readConfig() throws IOException {
-		BufferedReader in = new BufferedReader(new FileReader(new File("config")));		
-		Downloader.URL_BASE =  in.readLine();	
-		String commonkey = in.readLine();
-		if(commonkey.length() != 32){
-			Logger.messageBox("CommonKey length is wrong");
-			Logger.log("Commonkey length is wrong");
-			System.exit(1);
+	public static void readConfig(Stage primaryStage) throws IOException {
+                FieldsFile settingsFile=new FieldsFile("settings");
+                
+		Downloader.URL_BASE =  settingsFile.getValue("server", "http://ccs.cdn.wup.shop.nintendo.net/ccs/download");
+                
+		String commonkey = settingsFile.getValue("common_key",null);
+		if(commonkey==null || commonkey.length() != 32){
+                    Logger.log("CommonKey is invalid or null.");
+                        
+                   primaryStage.setOnShown(new EventHandler<WindowEvent>(){
+                        @Override
+                        public void handle(WindowEvent event) {
+                            MaterialToast toast=new MaterialToast("CommonKey is null or invalid. The titles won't download.");
+                        toast.setOnToastHidden(new EventHandler<WindowEvent>(){
+                            @Override
+                            public void handle(WindowEvent event) {
+                                //System.exit(1);
+                                 //To change body of generated methods, choose Tools | Templates.
+                            }
+                        });
+                        toast.unhide(); //To change body of generated methods, choose Tools | Templates.
+                        }
+                    });
+                    
+			//Logger.messageBox("CommonKey is invalid");
+			
+			
 		}
-		Util.commonKey =  Util.hexStringToByteArray(commonkey);
-		updateCSVPath =  in.readLine();
-		in.close();
+		if(commonkey!=null && !commonkey.equals("null") && commonkey.length()==32)
+                    try{
+                    Util.commonKey =  Util.hexStringToByteArray(commonkey);
+		
+                    }
+                catch(StringIndexOutOfBoundsException ex$){
+                    
+                }
+                //updateCSVPath =  in.readLine();
+		//in.close();
 		
 	}
 

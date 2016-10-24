@@ -7,7 +7,10 @@ package com.olmectron.jnustoolmod.gui;
 
 import com.olmectron.material.components.MaterialCard;
 import com.olmectron.material.components.MaterialDisplayText;
+import com.olmectron.material.components.MaterialDropdownMenu;
+import com.olmectron.material.components.MaterialDropdownMenuItem;
 import com.olmectron.material.components.MaterialFlowList;
+import com.olmectron.material.components.MaterialIconButton;
 import com.olmectron.material.components.MaterialProgressBar;
 import com.olmectron.material.components.MaterialStandardListItem;
 import com.olmectron.material.components.MaterialTextField;
@@ -23,12 +26,19 @@ import de.mas.jnustool.util.NUSTitleInformation;
 import de.mas.jnustool.util.Settings;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.logging.Level;
 import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
+import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -49,19 +59,43 @@ public class DownloadList extends MaterialFlowList<NUSTitleInformation>{
         super(new StackPane());
         
     }
-    private ObjectProperty<NUSTitleInformation> currentItem;
-    private ObjectProperty<NUSTitleInformation> currentItemProperty(){
-        if(currentItem==null){
-            currentItem=new SimpleObjectProperty<NUSTitleInformation>(this,"currentItem");
-            currentItem.set(null);
+    
+    
+    private ObservableList<NUSTitleInformation> currentItems;
+    private ObservableList<NUSTitleInformation> getCurrentItemsList(){
+        
+        if(currentItems==null){
+            currentItems=FXCollections.observableArrayList();
+            currentItems.addListener(new ListChangeListener<NUSTitleInformation>(){
+                @Override
+                public void onChanged(ListChangeListener.Change<? extends NUSTitleInformation> c) {
+                    if(c.next()){
+                        if(c.wasAdded()){
+                            
+                           for(NUSTitleInformation info: c.getAddedSubList()){
+                             startDownload(getItemBox(getItemIndex(info)));
+                           }
+                        }
+                    }
+                    
+//To change body of generated methods, choose Tools | Templates.
+                }
+            });
+            
         }
-        return currentItem;
+        
+        return currentItems;
     }
-    private void setCurrentItem(NUSTitleInformation g){
-        currentItemProperty().set(g);
+    private void addToCurrentItems(NUSTitleInformation g){
+        getCurrentItemsList().add(g);
     }
-    private NUSTitleInformation getCurrentItem(){
-        return currentItemProperty().get();
+    private void removeFromCurrentItems(NUSTitleInformation g){
+        for (int i=0;i<getCurrentItemsList().size();i++) {
+            if(getCurrentItemsList().get(i).getTitleID()==g.getTitleID()){
+                currentItems.remove(i);
+                break;
+            }
+        }
     }
     @Override
     public void cardConverter(MaterialCard card, NUSTitleInformation item, MaterialStandardListItem<NUSTitleInformation> itemContainer) {
@@ -100,7 +134,28 @@ public class DownloadList extends MaterialFlowList<NUSTitleInformation>{
             total.setId("total");
             progress.setAlignment(Pos.CENTER_RIGHT);
             bar.setProgress(0);
-            HBox box=new HBox(new VBox(titleText,nameText),spanBox,progress);
+            MaterialIconButton options=new MaterialIconButton(MaterialIconButton.MORE_VERT_ICON);
+            options.setOnClick(new EventHandler<ActionEvent>(){
+                @Override
+                public void handle(ActionEvent event) {
+                    MaterialDropdownMenu menu=new  MaterialDropdownMenu(options);
+                    menu.addItem(new MaterialDropdownMenuItem("Remove",MaterialIconButton.DELETE_ICON,true){
+
+                        @Override
+                        public void onItemClick() {
+                            removeItem(item);
+//To change body of generated methods, choose Tools | Templates.
+                        }
+                    
+                    });
+                    
+                    
+                    menu.unhide();
+                    //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                }
+            });
+            options.setColorCode(MaterialColor.material.BLACK_54);
+            HBox box=new HBox(new VBox(titleText,nameText),spanBox,progress,options);
             box.setPadding(new Insets(0,0,12,0));
             box.setAlignment(Pos.CENTER);
             total.setPadding(new Insets(0,0,8,0));
@@ -121,10 +176,31 @@ public class DownloadList extends MaterialFlowList<NUSTitleInformation>{
     public void onCardAttached(MaterialStandardListItem<NUSTitleInformation> itemContainer) {
         
         itemContainer.removeRipple(); //To change body of generated methods, choose Tools | Templates.
-        if(getCurrentItem()==null){
-        startDownload(itemContainer);
+        BackgroundTask task=new BackgroundTask() {
+            //private boolean startDownload=false;
+            @Override
+            public Object onAction() {
+                 if(getCurrentItemsList().size()<Global.settings.getMaxDownloads()){
+                     addToCurrentItems(itemContainer.getItem());
+        //startDownload=true;
         }else{
-            currentItemProperty().addListener(new ChangeListener<NUSTitleInformation>(){
+                     getCurrentItemsList().addListener(new ListChangeListener<NUSTitleInformation>(){
+                         @Override
+                         public void onChanged(ListChangeListener.Change<? extends NUSTitleInformation> c) {
+                             if(c.next()){
+                                 if(c.wasAdded() || c.wasRemoved()){
+                                     if(getCurrentItemsList().size()<Global.settings.getMaxDownloads()){
+                                         
+                                         getCurrentItemsList().removeListener(this);
+                                         addToCurrentItems(itemContainer.getItem());
+                                         
+                                     }
+                                 }
+                             }
+                             //To change body of generated methods, choose Tools | Templates.
+                         }
+                     });
+            /*currentItemProperty().addListener(new ChangeListener<NUSTitleInformation>(){
                 @Override
                 public void changed(ObservableValue<? extends NUSTitleInformation> observable, NUSTitleInformation oldValue, NUSTitleInformation newValue) {
                         
@@ -132,7 +208,7 @@ public class DownloadList extends MaterialFlowList<NUSTitleInformation>{
                             int oldIndex=getItemIndex(oldValue);
                             int newIndex=getItemIndex(itemContainer.getItem());
                             if(oldIndex==newIndex-1){
-                                startDownload(itemContainer);
+                                startDownload=true;
                             }
                             
                         }
@@ -140,9 +216,27 @@ public class DownloadList extends MaterialFlowList<NUSTitleInformation>{
 //To change body of generated methods, choose Tools | Templates.
                 }
             });
-            
+            */
             
         }
+
+                return null;//To change body of generated methods, choose Tools | Templates.
+            }
+
+            @Override
+            public void onSucceed(Object valor) {
+                
+                 //To change body of generated methods, choose Tools | Templates.
+            }
+        };
+             new Timer().schedule(
+    new TimerTask() {
+
+        @Override
+        public void run() {
+            task.play();
+        }
+    }, 1000);
         
     }
     private void startDownload(MaterialStandardListItem<NUSTitleInformation> itemContainer){
@@ -168,10 +262,10 @@ public class DownloadList extends MaterialFlowList<NUSTitleInformation>{
 		});
         ArrayList<NUSTitleInformation> lista=new ArrayList<NUSTitleInformation>();
         lista.add(itemContainer.getItem());
-        setCurrentItem(lista.get(0));
+        //setCurrentItem(lista.get(0));
         
-        NUSTitle title = new NUSTitle(getCurrentItem().getTitleID(),-1, null);
-					
+        NUSTitle title = new NUSTitle(lista.get(0).getTitleID(),-1, null);
+	title.setTIKFile(lista.get(0).getTIKFile());
         new Thread(new Runnable(){
 						@Override
 						public void run() {
@@ -187,9 +281,12 @@ public class DownloadList extends MaterialFlowList<NUSTitleInformation>{
                                                         Platform.runLater(new Runnable(){
                                                             @Override
                                                             public void run() {
-                                                                setCurrentItem(null);
-                                                                new MaterialToast(itemContainer.getItem().getLongnameEN()+" ("+itemContainer.getItem().getRegion().toString()+") finished!").unhide();
-                                                                //To change body of generated methods, choose Tools | Templates.
+                                                                getCurrentItemsList().remove(itemContainer.getItem());
+                                                                    new MaterialToast(itemContainer.getItem().getLongnameEN()+" finished!").unhide();
+                                                                
+                                                                
+                                                                    
+//To change body of generated methods, choose Tools | Templates.
                                                             }
                                                         });
                                                     } catch (IOException ex) {
