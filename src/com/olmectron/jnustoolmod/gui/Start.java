@@ -11,6 +11,7 @@ import com.olmectron.material.components.MaterialDropdownMenuItem;
 import com.olmectron.material.components.MaterialIconButton;
 import com.olmectron.material.components.MaterialTable;
 import com.olmectron.material.components.MaterialTableColumn;
+import com.olmectron.material.components.MaterialTextField;
 import com.olmectron.material.components.MaterialToast;
 import com.olmectron.material.components.MaterialTooltip;
 import com.olmectron.material.constants.MaterialColor;
@@ -30,6 +31,7 @@ import javafx.beans.value.ObservableValue;
 import javafx.collections.ListChangeListener;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
+import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -41,6 +43,7 @@ import javafx.scene.input.TransferMode;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
+import org.utilities.StringTrimmer;
 
 /**
  *
@@ -142,6 +145,27 @@ public class Start extends Application {
         layout.setTabTooltip("Settings","Settings");
         
         layout.showTab("Download queue");
+        MaterialIconButton searchNameButton=new MaterialIconButton(MaterialIconButton.SEARCH_ICON);
+        searchNameButton.setOnClick(new EventHandler<ActionEvent>(){
+            @Override
+            public void handle(ActionEvent event) {
+                getSearchMenu(searchNameButton).unhide();
+//To change body of generated methods, choose Tools | Templates.
+            }
+        });
+        MaterialTooltip searchNameTooltip=new MaterialTooltip(searchNameButton);
+        searchNameTooltip.setText("Search by name");
+        Global.settings.nameFilterProperty().addListener(new ChangeListener<String>(){
+            @Override
+            public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
+                if(newValue!=null)
+                searchNameTooltip.setText("Found "+titlePane.getTitleCount()+" titles "+"matching \n"+newValue+"");
+                if(newValue.isEmpty())
+                searchNameTooltip.setText("Search by name");
+                    
+                //To change body of generated methods, choose Tools | Templates.
+            }
+        });
         MaterialIconButton filterRegionButton=new MaterialIconButton();
         filterRegionButton.setIcon("/res/filter.png");
         MaterialTooltip tooltipFilter=new MaterialTooltip(filterRegionButton);
@@ -160,7 +184,9 @@ public class Start extends Application {
             }
         });
         tooltipFilter.setText("Filtered by region: "+titlePane.getTitleCount());
+        
         layout.addToolbarActionButton(filterRegionButton,0);
+        layout.addToolbarActionButton(searchNameButton,0);
         
          MaterialIconButton clearDownloadListButton=new MaterialIconButton();
         clearDownloadListButton.setIcon("/res/clear.png");
@@ -177,13 +203,46 @@ public class Start extends Application {
         layout.addToolbarActionButton(clearDownloadListButton,1);
         
         //layout.setTitle("Title List");
-        layout.setWindowTitle("JNUSTool GUI mod v0.6.3");
+        layout.setWindowTitle("JNUSTool GUI mod v0.6.5");
         MaterialDesign.setPrimaryColorCode(MaterialColor.material.TEAL);
         
         pane.getChildren().add(layout);
         primaryStage.show();
     }
     private MaterialDropdownMenu filterRegionMenu;
+    private MaterialDropdownMenu getSearchMenu(Region origen){
+        MaterialDropdownMenu menu=new MaterialDropdownMenu(origen);
+        MaterialTextField searchField=new  MaterialTextField("Search");
+        searchField.setOnAction(new EventHandler<ActionEvent>(){
+            @Override
+            public void handle(ActionEvent event) {
+                menu.hideMenu();
+                //To change body of generated methods, choose Tools | Templates.
+            }
+        });
+        searchField.setText(Global.settings.getNameFilter());
+        searchField.allowSpace();
+        searchField.allowDiagonal();
+        searchField.allowDot();
+        searchField.allowBottomLine();
+        searchField.allowPercentage();
+        searchField.textField().textProperty().addListener(new ChangeListener<String>(){
+            @Override
+            public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
+               
+                if(newValue!=null){
+                //System.out.println(newValue);
+                    Global.settings.setNameFilter(StringTrimmer.trim(newValue));     
+                }
+               
+//To change body of generated methods, choose Tools | Templates.
+            }
+        });
+        searchField.setPadding(new Insets(8,16,8,16));
+        menu.addNodeAsItem(searchField);
+        return menu;
+    }
+    
     private MaterialDropdownMenu getFilterRegionMenu(Region origen){
         int indice=-1;
             if(filterRegionMenu!=null){

@@ -220,5 +220,22 @@ catch(MalformedURLException ex){
         public static void setRegionFilter(String s){
             regionFilterProperty().set(s);
         }
+        
+        
+        
+        private static StringProperty nameFilter;
+        public static StringProperty nameFilterProperty(){
+            
+            if(nameFilter==null){
+                nameFilter=new SimpleStringProperty(Global.class,"nameFilter");
+            }
+            return nameFilter;
+        }
+        public static String getNameFilter(){
+            return nameFilterProperty().get();
+        }
+        public static void setNameFilter(String s){
+            nameFilterProperty().set(s);
+        }
     }
 }

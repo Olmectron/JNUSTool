@@ -53,7 +53,8 @@ public class TitleTable extends MaterialTable<NUSTitleInformation> {
         //    addItem(list.get(i));
         //}
         readTitleList();
-        setupRegionFilter();
+        //setupRegionFilter();
+        setupNameFilter();
         
     }
     private void fillList(ObservableList<NUSTitleInformation> infoList){
@@ -234,9 +235,86 @@ public class TitleTable extends MaterialTable<NUSTitleInformation> {
     public SortedList<NUSTitleInformation> getSortedData(){
         return sortedData;
     }
+    private void setupNameFilter(){
+         FilteredList<NUSTitleInformation> filteredData = new FilteredList<NUSTitleInformation>(this.getItemList(), p -> true);
+          
+           Global.settings.nameFilterProperty().addListener(new ChangeListener<String>(){
+                @Override
+                public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
+                    filteredData.setPredicate(info -> {
+                // If filter text is empty, display all persons.
+                if (newValue == null || (newValue.trim().isEmpty() && (Global.settings.getRegionFilter()==null || Global.settings.getRegionFilter().isEmpty()))) {
+                    return true;
+                }
+                StringTokenizer tokens=new StringTokenizer(newValue, " ");
+                ArrayList<String> lista=new ArrayList<String>();
+                while(tokens.hasMoreTokens()){
+                    lista.add(tokens.nextToken().toLowerCase());
+                    
+                    //System.out.println(lista.get(lista.size()-1));
+                }
+                boolean contiene=true;
+                for(String s:lista){
+                    
+                    contiene=contiene && info.getLongnameEN().toLowerCase().contains(s);
+                    if(!contiene)
+                        return false;
+                }
+                if(Global.settings.getRegionFilter()!=null)
+                contiene = contiene && info.getRegion().toString().equalsIgnoreCase(Global.settings.getRegionFilter());
+                
+                return contiene;
+                
+            }); //To change body of generated methods, choose Tools | Templates.
+                }
+            });
+           
+           Global.settings.regionFilterProperty().addListener(new ChangeListener<String>(){
+                @Override
+                public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
+                    filteredData.setPredicate(info -> {
+                // If filter text is empty, display all persons.
+                //if ((newValue.trim().isEmpty() && (Global.settings.getNameFilter()==null || Global.settings.getNameFilter().isEmpty()))) {
+                //    return true;
+                //}
+                
+                boolean contiene=true;
+                if(Global.settings.getNameFilter()!=null){
+                 StringTokenizer tokens=new StringTokenizer(Global.settings.getNameFilter(), " ");
+                ArrayList<String> lista=new ArrayList<String>();
+                while(tokens.hasMoreTokens()){
+                    lista.add(tokens.nextToken().toLowerCase());
+                    
+                    //System.out.println(lista.get(lista.size()-1));
+                }
+                for(String s:lista){
+                    
+                    contiene=contiene && info.getLongnameEN().toLowerCase().contains(s);
+                    if(!contiene)
+                        return false;
+                }
+                }
+                if(newValue!=null)
+                contiene = contiene && info.getRegion().toString().equalsIgnoreCase(newValue);
+                
+                return contiene;
+            }); //To change body of generated methods, choose Tools | Templates.
+                }
+            });
+           
+           
+           sortedData = new SortedList<>(filteredData);
+
+        // 4. Bind the SortedList comparator to the TableView comparator.
+        sortedData.comparatorProperty().bind(getTable().comparatorProperty());
+
+        // 5. Add sorted (and filtered) data to the table.
+        getTable().setItems(sortedData);
+    }
     private void setupRegionFilter(){
            FilteredList<NUSTitleInformation> filteredData = new FilteredList<NUSTitleInformation>(this.getItemList(), p -> true);
-          Global.settings.regionFilterProperty().addListener(new ChangeListener<String>(){
+          
+           Global.settings.regionFilterProperty().addListener(new ChangeListener<String>(){
                 @Override
                 public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
                     filteredData.setPredicate(info -> {
