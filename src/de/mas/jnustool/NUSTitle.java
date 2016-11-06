@@ -1,6 +1,8 @@
 package de.mas.jnustool;
 
+import com.olmectron.jnustoolmod.gui.Global;
 import com.olmectron.jnustoolmod.gui.TIKFile;
+import com.olmectron.material.components.MaterialToast;
 import com.olmectron.material.files.ExportFile;
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -27,6 +29,9 @@ import de.mas.jnustool.util.Downloader;
 import de.mas.jnustool.util.NUSTitleInformation;
 import de.mas.jnustool.util.Settings;
 import de.mas.jnustool.util.Util;
+import javafx.application.Platform;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 
 public class NUSTitle {
     public TIKFile TIKFile=null;
@@ -53,8 +58,10 @@ public class NUSTitle {
 		return result;
 	}
 	
-	public NUSTitle(long titleId,int version, String key) {
+	public NUSTitle(long titleId,int version, String key,String nombre) {
 		setVersion(version);
+                setNombre(nombre);
+                System.err.println("SET "+titleId);
 		setTitleID(titleId);
 		if(version != -1){
 			Logger.log("Version " + version);
@@ -103,6 +110,13 @@ public class NUSTitle {
 					try{
 						tmd = new TitleMetaData(Downloader.getInstance().downloadTMDToByteArray(titleId,this.version));
 					}catch(IllegalArgumentException e){
+                                            Platform.runLater(new Runnable(){
+                                                @Override
+                                                public void run() {
+                                                    
+                                                new MaterialToast("TMD wrong. Title not found").unhide(); //To change body of generated methods, choose Tools | Templates.
+                                                }
+                                            });
 						Logger.log("TMD wrong. Title not found");
 						setTitleID(0);
 						return;
@@ -229,11 +243,22 @@ public class NUSTitle {
 			e.printStackTrace();
 		}
 	}
-        
-	public void downloadEncryptedFiles(Progress progress) throws IOException {		
+        private String nombre;
+        public void setNombre(String n){
+            this.nombre=n;
+        }
+        public String getNombre(){
+            return nombre;
+        }
+        public void stopTMDDownload(){
+            tmd.stopDownload();
+        }
+	public void downloadEncryptedFiles(Progress progress) throws IOException {	
+            
 		Util.createSubfolder(getContentPath());
 		
-		Logger.log("---Downloading encrypted files---");
+		Logger.log("---Downloading encrypted files--- of "+titleID);
+                
 		Downloader.getInstance().downloadTMD(titleID,version,getContentPath());
 		Logger.log("Downloaded title.tmd");
 		tmd.downloadContents(progress);
@@ -250,6 +275,11 @@ public class NUSTitle {
                     Files.copy(getTIKFile().getFile().toPath(),f.toPath());
                     
                     Logger.log("title.tik file imported to download directory");
+                }
+                else if(Global.settings.getNusTitleJSON()!=null){
+                    Global.downloadTIK(
+		(String.format("%08X%08X", getTitleID()>>32,getTitleID()<<32>>32)).toLowerCase(),f);
+                    
                 }
                 else
                 Logger.log("!!!Missing file: title.tik. You need to add it manually before you can install this title.!!!");
@@ -294,8 +324,23 @@ public class NUSTitle {
 			Logger.log("Error while creating ticket files.");
 		}
         Logger.log("Created title.cert");   
+        setFinished(true);
         Logger.log("---Successfully downloaded encrypted files---");
 	}
+        private BooleanProperty finished;
+        public BooleanProperty finishedProperty(){
+            if(finished==null){
+                finished=new SimpleBooleanProperty(this,"finished");
+                finished.set(false);
+            }
+            return finished;
+        }
+        public void setFinished(boolean finished){
+            finishedProperty().set(finished);
+        }
+        public boolean getFinished(){
+            return finishedProperty().get();
+        } 
 
 	public NUSTitleInformation readMeta(InputStream bis) {
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
@@ -356,7 +401,7 @@ public class NUSTitle {
 	}
 
 	public String getContentPath() {		
-		String result = getContentPathPrefix() + String.format("%016X", getTitleID());
+		String result = Global.settings.getDownloadHome()+"/"+"["+ String.format("%016X", getTitleID())+"]"+getNombre().replaceAll(" ","_").replaceAll("[^a-zA-Z0-9_.]+","");
 		if(version > 0 && !Settings.DL_ALL_VERSIONS){ //Only add the prefix when we don't download all version of that title			
 			result += "_v" + version;
 		}

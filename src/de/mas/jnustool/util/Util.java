@@ -72,7 +72,7 @@ public class Util {
 		if(path.length == 1){
 			folder_ = new File(folder);				
 		    if(!folder_.exists()){
-		    	folder_.mkdir();	    	    	
+		    	folder_.mkdirs();
 		    }
 		}
 		for(int i = 0;i<path.length-1;i++){
@@ -80,7 +80,7 @@ public class Util {
 				foldername += path[i] + "/";
 				folder_ = new File(foldername);				
 			    if(!folder_.exists()){
-			    	folder_.mkdir();	    	    	
+			    		    	folder_.mkdirs();	    	    	
 			    }
 			}	    	
 		}

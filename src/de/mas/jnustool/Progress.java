@@ -3,6 +3,9 @@ package de.mas.jnustool;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleStringProperty;
 
 public class Progress {
 	private AtomicLong total = new AtomicLong();
@@ -117,17 +120,22 @@ public class Progress {
 		addCurrent((int) getTotalOfSingle());
 	}
 	
-	private boolean inprogress = false;
-
+	private BooleanProperty inprogress;
+        public BooleanProperty inprogressProperty(){
+            if(inprogress==null){
+                inprogress=new SimpleBooleanProperty(Progress.class,"inprogress");
+            }
+            return inprogress;
+        }
 	public void operationStart() {
-		inprogress = true;		
+		inprogressProperty().set(true);
 	}
 	public void operationFinish() {
-		inprogress = false;
+		inprogressProperty().set(false);
 	}
 	
 	public boolean isInProgress(){
-		return inprogress;
+		return inprogressProperty().get();
 	}
 
 	public void resetCurrent() {

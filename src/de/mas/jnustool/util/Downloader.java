@@ -11,6 +11,7 @@ import java.net.URL;
 import de.mas.jnustool.FEntry;
 import de.mas.jnustool.Logger;
 import de.mas.jnustool.Progress;
+import java.io.File;
 
 public class Downloader {
 	private static Downloader instance;
@@ -80,7 +81,11 @@ public class Downloader {
 		String version_suf = "";
 		if(version > 0) version_suf = "." + version;
 		String URL = URL_BASE + "/" + String.format("%016X", titleID) +  "/tmd" + version_suf;
-		downloadFile(URL, "title.tmd",path,null);
+                
+                File camino=new File(path);
+                camino.mkdirs();
+                System.err.println("BIG URL "+URL);
+		downloadFile(URL, "title.tmd",camino.getAbsolutePath(),null);
 		if(Settings.DL_ALL_VERSIONS) downloadFile(URL, "title.tmd"+version_suf,path,null);
 	}
 	

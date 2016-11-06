@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.application.Application;
+import javafx.application.HostServices;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ListChangeListener;
@@ -52,6 +53,7 @@ public class Start extends Application {
             @Override
             public void handle(DragEvent event) {
                 Dragboard db = event.getDragboard();
+               
                 if (db.hasFiles()) {
                     event.acceptTransferModes(TransferMode.COPY);
                 } else {
@@ -99,8 +101,13 @@ public class Start extends Application {
             }
         });
     }
+    private static HostServices host;
+    public static void showFile(String file){
+        host.showDocument(new File(file).toURI().toString());
+    }
     @Override
     public void start(Stage primaryStage) {
+        host=getHostServices();
         MaterialDesign.initSystemProperties();
         try {
             ExportFile.exportFile("/res/fulltitles.csv", "fulltitles.csv");
@@ -170,7 +177,7 @@ public class Start extends Application {
         layout.addToolbarActionButton(clearDownloadListButton,1);
         
         //layout.setTitle("Title List");
-        layout.setWindowTitle("JNUSTool GUI mod v0.5");
+        layout.setWindowTitle("JNUSTool GUI mod v0.6.3");
         MaterialDesign.setPrimaryColorCode(MaterialColor.material.TEAL);
         
         pane.getChildren().add(layout);

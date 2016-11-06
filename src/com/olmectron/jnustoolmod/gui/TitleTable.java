@@ -27,7 +27,9 @@ import java.util.List;
 import java.util.StringTokenizer;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
+import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import javafx.scene.control.TableCell;
@@ -45,17 +47,45 @@ public class TitleTable extends MaterialTable<NUSTitleInformation> {
         super();
         dPane=pane;
         initTitleTable();
-        List<NUSTitleInformation> list=Titles.readTitles();
-        Collections.sort(list);
-        for(int i=0;i<list.size();i++){
-            addItem(list.get(i));
-        }
+        //List<NUSTitleInformation> list=Titles.readTitles();
+        //Collections.sort(list);
+        //for(int i=0;i<list.size();i++){
+        //    addItem(list.get(i));
+        //}
+        readTitleList();
         setupRegionFilter();
+        
+    }
+    private void fillList(ObservableList<NUSTitleInformation> infoList){
+        this.removeAllItems();
+        FXCollections.sort(infoList);
+        
+        for(int i=0;i<infoList.size();i++){
+            addItem(infoList.get(i));
+        }
+    }
+    private void readTitleList(){
+        
+        NUSTitleJSON actualJSON=Global.settings.getNusTitleJSON();
+        
+        if(actualJSON!=null){
+            fillList(actualJSON.getObjectList());
+        }
+        
+            Global.settings.nusTitleJSONProperty().addListener(new ChangeListener<NUSTitleJSON>(){
+                @Override
+                public void changed(ObservableValue<? extends NUSTitleJSON> observable, NUSTitleJSON oldValue, NUSTitleJSON newValue) {
+                    if(newValue!=null){
+                        fillList(newValue.getObjectList());
+                    }
+                    //To change body of generated methods, choose Tools | Templates.
+                }
+            });
         
     }
     
     private void initTitleTable(){
-        
+            this.getTable().setFixedCellSize(55);
             getTable().setPrefHeight(1080);
             MaterialTableColumn titleColumn=new MaterialTableColumn("Title ID");
        titleColumn.setMinWidth(160);
@@ -119,7 +149,8 @@ public class TitleTable extends MaterialTable<NUSTitleInformation> {
     };
 });
         MaterialTableColumn nameColumn=new MaterialTableColumn("Name");
-       nameColumn.setMinWidth(470);
+       nameColumn.setMinWidth(400);
+       
        nameColumn.setCellValueFactory(new PropertyValueFactory<NUSTitleInformation, String>("longnameEN"));
        nameColumn.setCellFactory(column -> {
     return new TableCell<NUSTitleInformation, String>() {
@@ -152,8 +183,51 @@ public class TitleTable extends MaterialTable<NUSTitleInformation> {
        versionColumn.setMinWidth(70);
        versionColumn.setCellValueFactory(new PropertyValueFactory<NUSTitleInformation, String>("latestVersion"));
        
+        MaterialTableColumn titleType=new MaterialTableColumn("Type");
+       titleType.setMinWidth(70);
+       titleType.setCellValueFactory(new PropertyValueFactory<NUSTitleInformation, String>("titleIDString"));
+         titleType.setCellFactory(column -> {
+    return new TableCell<NUSTitleInformation, String>() {
+        @Override
+        protected void updateItem(String item, boolean empty) {
+            super.updateItem(item, empty);
+
+            if (item == null || empty) {
+                setText(null);
+            } else {
+                // Format date.
+                //setStyle("-fx-font-size:15px;-fx-text-fill: "+MaterialColor.material.INDIGO.getStandardWebCode()+";");
+                setStyle("-fx-font-size:14px;");
+                
+                if(item.startsWith("00050000")){
+                    setText("Full title");
+               
+                }
+                else if(item.startsWith("0005000E")){
+                    setText("Update title");
+                }
+                else {
+                    setText("Unknown");
+                }
+                
+               
+
+                // Style all dates in March with a different color.
+                /*if (item.getMonth() == Month.MARCH) {
+                    setTextFill(Color.CHOCOLATE);
+                    setStyle("-fx-background-color: yellow");
+                } else {
+                    setTextFill(Color.BLACK);
+                    setStyle("");
+                }*/
+            }
+        }
+    };
+});
        
-       getTable().getColumns().addAll(titleColumn,nameColumn,regionColumn);//,versionColumn);
+       
+       
+       getTable().getColumns().addAll(titleColumn,nameColumn,regionColumn,titleType);//,versionColumn);
         
     }
     private SortedList<NUSTitleInformation> sortedData;

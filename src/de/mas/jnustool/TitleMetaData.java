@@ -204,15 +204,23 @@ public class TitleMetaData {
 	 * @param progress: A progress object can be used to get informations of the progress. Will be ignored when null is used. 
 	 * @throws IOException
 	 */	
+        public void stopDownload(){
+            if(pool!=null){
+                pool.shutdownNow();
+            }
+        }
+        private ForkJoinPool pool;
 	public void downloadContents(Progress progress) throws IOException{
 		
 		String tmpPath = getContentPath();
 		File f = new File(tmpPath);
 		if(!f.exists())f.mkdir();
 		
-		ForkJoinPool pool = ForkJoinPool.commonPool();
+		pool = ForkJoinPool.commonPool();
+                
 		List<ContentDownloader> dlList = new ArrayList<>();
 		for(Content c : contents){
+                    
 			dlList.add(new ContentDownloader(c,progress));			
 		}
 		pool.invokeAll(dlList);

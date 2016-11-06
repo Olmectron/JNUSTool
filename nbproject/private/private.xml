@@ -2,23 +2,6 @@
 <project-private xmlns="http://www.netbeans.org/ns/project-private/1">
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
-        <group>
-            <file>file:/C:/Users/Édgar/Documents/NetBeansProjects/JNUSTool%20GUI%20mod/src/de/mas/jnustool/util/Util.java</file>
-            <file>file:/C:/Users/Édgar/Documents/NetBeansProjects/JNUSTool%20GUI%20mod/src/com/olmectron/jnustoolmod/gui/TitleTable.java</file>
-            <file>file:/C:/Users/Édgar/Documents/NetBeansProjects/JNUSTool%20GUI%20mod/src/de/mas/jnustool/gui/UpdateChooser.java</file>
-            <file>file:/C:/Users/Édgar/Documents/NetBeansProjects/JNUSTool%20GUI%20mod/src/com/olmectron/jnustoolmod/gui/Start.java</file>
-            <file>file:/C:/Users/Édgar/Documents/NetBeansProjects/JNUSTool%20GUI%20mod/src/com/olmectron/jnustoolmod/gui/DownloadList.java</file>
-            <file>file:/C:/Users/Édgar/Documents/NetBeansProjects/JNUSTool%20GUI%20mod/src/com/olmectron/jnustoolmod/gui/TitlePane.java</file>
-            <file>file:/C:/Users/Édgar/Documents/NetBeansProjects/JNUSTool%20GUI%20mod/src/de/mas/jnustool/NUSTitle.java</file>
-            <file>file:/C:/Users/Édgar/Documents/NetBeansProjects/JNUSTool%20GUI%20mod/build.xml</file>
-            <file>file:/C:/Users/Édgar/Documents/NetBeansProjects/JNUSTool%20GUI%20mod/src/de/mas/jnustool/Starter.java</file>
-            <file>file:/C:/Users/Édgar/Documents/NetBeansProjects/JNUSTool%20GUI%20mod/src/com/olmectron/jnustoolmod/gui/TIKFile.java</file>
-            <file>file:/C:/Users/Édgar/Documents/NetBeansProjects/JNUSTool%20GUI%20mod/src/de/mas/jnustool/util/NUSTitleInformation.java</file>
-            <file>file:/C:/Users/Édgar/Documents/NetBeansProjects/JNUSTool%20GUI%20mod/src/de/mas/jnustool/gui/NUSGUI.java</file>
-            <file>file:/C:/Users/Édgar/Documents/NetBeansProjects/JNUSTool%20GUI%20mod/src/com/olmectron/jnustoolmod/gui/Titles.java</file>
-            <file>file:/C:/Users/Édgar/Documents/NetBeansProjects/JNUSTool%20GUI%20mod/src/com/olmectron/jnustoolmod/gui/DownloadPane.java</file>
-            <file>file:/C:/Users/Édgar/Documents/NetBeansProjects/JNUSTool%20GUI%20mod/src/com/olmectron/jnustoolmod/gui/Hex.java</file>
-            <file>file:/C:/Users/Édgar/Documents/NetBeansProjects/JNUSTool%20GUI%20mod/src/de/mas/jnustool/TitleMetaData.java</file>
-        </group>
+        <group/>
     </open-files>
 </project-private>

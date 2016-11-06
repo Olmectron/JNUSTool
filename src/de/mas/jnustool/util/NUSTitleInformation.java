@@ -1,12 +1,21 @@
 package de.mas.jnustool.util;
 
 import com.olmectron.jnustoolmod.gui.TIKFile;
+import com.olmectron.material.components.MaterialToast;
+import de.mas.jnustool.NUSTitle;
+import de.mas.jnustool.Progress;
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.StringTokenizer;
+import java.util.logging.Level;
+import javafx.application.Platform;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.LongProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleLongProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -108,12 +117,16 @@ public int getRegionInt(){
 		this(titleID, longnameEN, ID6, product_code,content_platform,company_code,region,new String[1]);
 	}
         
+        public static final int JAP=1;
+        public static final int USA=2;
+        public static final int EUR=4;
+        public static final int UKWN=7;
         
 	public Region getRegionAsRegion() {		
 		switch (getRegionInt()) {
-        	case 1:  return Region.JAP;                 
-        	case 2:  return  Region.USA;
-        	case 4:  return  Region.EUR;
+        	case JAP:  return Region.JAP;                 
+        	case USA:  return  Region.USA;
+        	case EUR:  return  Region.EUR;
         	default: return  Region.UKWN;
 		}
 	}
@@ -200,12 +213,90 @@ public void setRegion(Region val){
 public Region getRegion(){
    return regionProperty().get();
 }
-
 	public void updateTitleIDString() {
 		setTitleIDString(String.format("%08X-%08X", getTitleID()>>32,getTitleID()<<32>>32));
 		
 	}
+        private Progress prog;
+        public void setProgress(Progress p){
+            this.prog=p;
+            
+        }
+        public Progress getProgress(){
+            if(prog==null){
+                prog=new Progress();
+               
+            }
+            return this.prog;
+        }
+        private Thread getRunningThread(){
+            if(getProgress().isInProgress()){
+                return downloadThread;
+            }
+            return null;
+        }
+       
+        private Thread downloadThread=new Thread(new Runnable(){
+						@Override
+						public void run() {
+                                                    
+ 
+                                                    try {
+                                                        getProgress().clear();
+                                                        //title.decryptFEntries(title.getFst().getFileEntriesByFilePath(path), null);
+                                                            getActualTitle().downloadEncryptedFiles(getProgress());
+                                                        
+                                                        
+                                                        //Starter.downloadEncrypted(lista,progress);
+                                                        getProgress().operationFinish();
+                                                        
+                                                    } catch (IOException ex) {
+                                                        java.util.logging.Logger.getLogger(NUSTitleInformation.class.getName()).log(Level.SEVERE, null, ex);
+                                                    }
+							}
+	        			
+	        		});
+       
+        public void interruptDownload(){
+            if(
+            this.actualTitle!=null)
+                actualTitle.stopTMDDownload();
+        }
+        public void startDownload(){
+          
+        downloadThread.start();
         
+            
+            
+        }
+        public String getFolderPath(){
+            if(actualTitle!=null){
+                return actualTitle.getContentPath();
+            }
+            return null;
+        }
+        private NUSTitle actualTitle;
+        public NUSTitle getActualTitle(){
+            if(actualTitle==null){
+            String nombre;
+            if(this.getRegion()!=null){
+            nombre=(this.getLongnameEN()+" ("+this.getRegion().toString()+")");
+        }
+        else{
+            nombre=(this.getLongnameEN());
+        }
+            if(this.getTitleIDString().startsWith("00050000")){
+                nombre=nombre+"_FULL";
+            }
+            else if(this.getTitleIDString().startsWith("0005000E")){
+                nombre=nombre+"_LATEST_UPDATE";
+            }
+            actualTitle= new NUSTitle(getTitleID(),-1, null,nombre);
+	actualTitle.setTIKFile(getTIKFile());
+        
+            }
+        return actualTitle;
+        }
 private StringProperty titleIDString;
 public StringProperty titleIDStringProperty(){
    if(titleIDString==null){
@@ -213,6 +304,18 @@ public StringProperty titleIDStringProperty(){
    }
    return titleIDString;
 }
+private BooleanProperty finished;
+        public BooleanProperty finishedProperty(){
+            if(finished==null){
+                finished=new SimpleBooleanProperty(this,"finished");
+                finished.set(false);
+                finished.bind(getActualTitle().finishedProperty());
+            }
+            return finished;
+        }
+        public boolean getFinished(){
+            return finishedProperty().get();
+        } 
 public void setTitleIDString(String val){
    titleIDStringProperty().set(val);
 }

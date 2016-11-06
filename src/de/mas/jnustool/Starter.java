@@ -1,8 +1,12 @@
 package de.mas.jnustool;
 
+import com.olmectron.jnustoolmod.gui.Global;
+import com.olmectron.jnustoolmod.gui.NUSTitleJSON;
 import com.olmectron.material.MaterialDesign;
 import com.olmectron.material.components.MaterialToast;
+import com.olmectron.material.files.ExportFile;
 import com.olmectron.material.files.FieldsFile;
+import com.olmectron.material.files.TextFile;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -22,6 +26,12 @@ import de.mas.jnustool.gui.UpdateChooser;
 import de.mas.jnustool.util.Downloader;
 import de.mas.jnustool.util.NUSTitleInformation;
 import de.mas.jnustool.util.Util;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.net.URL;
+import java.nio.channels.Channels;
+import java.nio.channels.ReadableByteChannel;
+import java.nio.file.Files;
 import javafx.event.EventHandler;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
@@ -74,7 +84,7 @@ public class Starter {
                     }       
 				}
 				if(dl_encrypted){
-					NUSTitle title = new NUSTitle(titleID,version, key);
+					NUSTitle title = new NUSTitle(titleID,version, key,null);
 					try {
 						title.downloadEncryptedFiles(null);
 					} catch (IOException e) {
@@ -83,14 +93,14 @@ public class Starter {
                                         
 					System.exit(0);
 				}else if(download_file){
-                    NUSTitle title = new NUSTitle(titleID,version, key);
+                    NUSTitle title = new NUSTitle(titleID,version, key,null);
                     
                     title.decryptFEntries(title.getFst().getFileEntriesByFilePath(path), null);
                     
                     System.exit(0);
                 }
 				
-				NUSGUI m = new NUSGUI(new NUSTitle(titleID,version, key));
+				NUSGUI m = new NUSGUI(new NUSTitle(titleID,version, key,null));
 		        m.setVisible(true);			
 			}
 		}else{
@@ -101,7 +111,7 @@ public class Starter {
 					
 					@Override
 					public void run() {
-						NUSGUI m = new NUSGUI(new NUSTitle(tID,nus.getSelectedVersion(), null));
+						NUSGUI m = new NUSGUI(new NUSTitle(tID,nus.getSelectedVersion(), null,null));
 				        m.setVisible(true);						
 					}
 				}).start();;
@@ -175,10 +185,27 @@ public class Starter {
 	}
 
 
-
+public static boolean sameArrays(byte[] array1, byte[] array2) {
+        boolean b = true;
+        if (array1 != null && array2 != null){
+          if (array1.length != array2.length)
+              b = false;
+          else
+              for (int i = 0; i < array2.length; i++) {
+                  if (array2[i] != array1[i]) {
+                      b = false;    
+                  }                 
+            }
+        }else{
+          b = false;
+        }
+        return b;
+    }
 	public static void readConfig(Stage primaryStage) throws IOException {
+            
                 FieldsFile settingsFile=new FieldsFile("settings");
-                
+                Global.settings.downloadTitleListFiles(settingsFile.getValue("title_site","https://"));
+
 		Downloader.URL_BASE =  settingsFile.getValue("server", "http://ccs.cdn.wup.shop.nintendo.net/ccs/download");
                 
 		String commonkey = settingsFile.getValue("common_key",null);
@@ -241,7 +268,7 @@ public class Starter {
 			list.add(pool.submit(new Callable<Boolean>(){
 				@Override
 				public Boolean call() throws Exception {
-					NUSTitle nusa  = new NUSTitle(tID,nus.getSelectedVersion(),Util.ByteArrayToString(nus.getKey()));
+					NUSTitle nusa  = new NUSTitle(tID,nus.getSelectedVersion(),Util.ByteArrayToString(nus.getKey()),null);
 					Progress childProgress = new Progress();
 					
 					totalProgress.add(childProgress);
@@ -274,7 +301,7 @@ public class Starter {
 			list.add(pool.submit(new Callable<Boolean>(){
 				@Override
 				public Boolean call() throws Exception {
-					NUSTitle nusa  = new NUSTitle(tID,nus.getSelectedVersion(), Util.ByteArrayToString(nus.getKey()));
+					NUSTitle nusa  = new NUSTitle(tID,nus.getSelectedVersion(), Util.ByteArrayToString(nus.getKey()),null);
 					Progress childProgress = new Progress();					
 					progress.add(childProgress);
 					nusa.downloadEncryptedFiles(progress);
@@ -311,7 +338,7 @@ public class Starter {
 				public Boolean call() throws Exception {
 					int count = 1;
 					for(Integer i : nus.getAllVersions()){
-						NUSTitle nusa  = new NUSTitle(tID,i, Util.ByteArrayToString(nus.getKey()));
+						NUSTitle nusa  = new NUSTitle(tID,i, Util.ByteArrayToString(nus.getKey()),null);
 						Progress childProgress = new Progress();
 						progress.add(childProgress);			
 						nusa.downloadEncryptedFiles(progress);
